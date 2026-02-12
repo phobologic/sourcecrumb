@@ -1,0 +1,49 @@
+[project]
+name = "repoguide"
+version = "0.1.0"
+description = "Tree-sitter repository map in TOON format for LLM consumption"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "typer>=0.15.0",
+    "tree-sitter>=0.24.0",
+    "tree-sitter-language-pack>=0.6.0",
+    "networkx>=3.2",
+    "pathspec>=0.12.0",
+    "numpy>=2.4.2",
+    "scipy>=1.17.0",
+]
+
+[project.scripts]
+repoguide = "repoguide.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.9.0",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+    "RUF",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["repoguide"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

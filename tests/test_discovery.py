@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
+from unittest.mock import patch
 
-from repoguide.discovery import discover_files
+from repoguide.discovery import _git_ls_files, discover_files
 
 
 class TestDiscoverFiles:
@@ -98,3 +100,93 @@ class TestDiscoverFiles:
         (sub / "mod.py").write_text("pass", encoding="utf-8")
         result = discover_files(tmp_path)
         assert result[0][0] == Path("pkg/mod.py")
+
+
+class TestGitLsFiles:
+    """Tests for _git_ls_files."""
+
+    def test_returns_none_without_git_dir(self, tmp_path: Path) -> None:
+        assert _git_ls_files(tmp_path) is None
+
+    def test_returns_none_on_command_error(self, tmp_path: Path) -> None:
+        (tmp_path / ".git").mkdir()
+        with patch(
+            "repoguide.discovery.subprocess.run",
+            return_value=subprocess.CompletedProcess(
+                [], returncode=128, stdout="", stderr=""
+            ),
+        ):
+            assert _git_ls_files(tmp_path) is None
+
+    def test_returns_none_on_timeout(self, tmp_path: Path) -> None:
+        (tmp_path / ".git").mkdir()
+        with patch(
+            "repoguide.discovery.subprocess.run",
+            side_effect=subprocess.TimeoutExpired(cmd=[], timeout=10),
+        ):
+            assert _git_ls_files(tmp_path) is None
+
+    def test_returns_none_on_missing_git_binary(self, tmp_path: Path) -> None:
+        (tmp_path / ".git").mkdir()
+        with patch(
+            "repoguide.discovery.subprocess.run",
+            side_effect=FileNotFoundError("git"),
+        ):
+            assert _git_ls_files(tmp_path) is None
+
+    def test_returns_file_set(self, tmp_path: Path) -> None:
+        (tmp_path / ".git").mkdir()
+        with patch(
+            "repoguide.discovery.subprocess.run",
+            return_value=subprocess.CompletedProcess(
+                [], returncode=0, stdout="a.py\npkg/b.py\n", stderr=""
+            ),
+        ):
+            result = _git_ls_files(tmp_path)
+            assert result == {"a.py", "pkg/b.py"}
+
+
+class TestGitIgnoreIntegration:
+    """Tests for gitignore integration via git ls-files."""
+
+    def test_subdirectory_gitignore_honored(self, tmp_path: Path) -> None:
+        """Files excluded by subdirectory .gitignore are filtered out."""
+        (tmp_path / "kept.py").write_text("pass", encoding="utf-8")
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        (sub / "visible.py").write_text("pass", encoding="utf-8")
+        (sub / "hidden.py").write_text("pass", encoding="utf-8")
+        # Mock git ls-files to exclude sub/hidden.py
+        with patch(
+            "repoguide.discovery._git_ls_files",
+            return_value={"kept.py", "sub/visible.py"},
+        ):
+            result = discover_files(tmp_path)
+        paths = [r[0] for r in result]
+        assert Path("kept.py") in paths
+        assert Path("sub/visible.py") in paths
+        assert Path("sub/hidden.py") not in paths
+
+    def test_fallback_when_git_unavailable(self, tmp_path: Path) -> None:
+        """Falls back to root .gitignore parsing when git ls-files fails."""
+        (tmp_path / ".gitignore").write_text("ignored.py\n", encoding="utf-8")
+        (tmp_path / "ignored.py").write_text("pass", encoding="utf-8")
+        (tmp_path / "kept.py").write_text("pass", encoding="utf-8")
+        # No .git dir → _git_ls_files returns None → pathspec fallback
+        result = discover_files(tmp_path)
+        paths = [r[0] for r in result]
+        assert Path("ignored.py") not in paths
+        assert Path("kept.py") in paths
+
+    def test_extra_ignores_with_git_ls_files(self, tmp_path: Path) -> None:
+        """extra_ignores still applies when git ls-files is used."""
+        (tmp_path / "gen.py").write_text("pass", encoding="utf-8")
+        (tmp_path / "app.py").write_text("pass", encoding="utf-8")
+        with patch(
+            "repoguide.discovery._git_ls_files",
+            return_value={"gen.py", "app.py"},
+        ):
+            result = discover_files(tmp_path, extra_ignores=["gen.py"])
+        paths = [r[0] for r in result]
+        assert Path("gen.py") not in paths
+        assert Path("app.py") in paths

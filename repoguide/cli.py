@@ -50,6 +50,7 @@ def main(
         typer.Option(
             "--max-files",
             "-n",
+            min=1,
             help="Maximum number of files to include in output.",
         ),
     ] = None,
@@ -102,7 +103,7 @@ def main(
         raise typer.Exit(1)
 
     graph, dependencies = build_graph(file_infos)
-    file_infos = rank_files(graph, file_infos)
+    rank_files(graph, file_infos)
 
     repo_map = RepoMap(
         repo_name=root.name,

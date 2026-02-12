@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from pathlib import Path
 
 import pathspec
@@ -31,6 +32,34 @@ SKIP_DIRS: frozenset[str] = frozenset(
 )
 
 
+def _git_ls_files(root: Path) -> set[str] | None:
+    """Return the set of git-tracked and untracked-but-not-ignored files.
+
+    Uses ``git ls-files --cached --others --exclude-standard`` to respect
+    all gitignore files (root, subdirectory, and global).
+
+    Returns:
+        Set of repo-relative file paths, or None if git is unavailable
+        or the directory is not a git repository.
+    """
+    if not (root / ".git").exists():
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return set(result.stdout.splitlines())
+
+
 def discover_files(
     root: Path,
     *,
@@ -47,7 +76,8 @@ def discover_files(
     Returns:
         List of (relative_path, language_name) tuples, sorted by path.
     """
-    gitignore = _load_gitignore(root)
+    git_files = _git_ls_files(root)
+    gitignore = _load_gitignore(root) if git_files is None else None
 
     extra_spec = None
     if extra_ignores:
@@ -73,7 +103,10 @@ def discover_files(
 
             rel = rel_dir / fname
 
-            if gitignore.match_file(str(rel)):
+            if git_files is not None:
+                if str(rel) not in git_files:
+                    continue
+            elif gitignore and gitignore.match_file(str(rel)):
                 continue
 
             if extra_spec and extra_spec.match_file(str(rel)):

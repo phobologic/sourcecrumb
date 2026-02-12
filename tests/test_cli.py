@@ -68,6 +68,14 @@ class TestCLI:
         assert result.exit_code == 1  # All files fail → no files parsed
         assert "Warning" in result.output
 
+    def test_max_files_zero_rejected(self, sample_repo: Path) -> None:
+        result = runner.invoke(app, [str(sample_repo), "--max-files", "0"])
+        assert result.exit_code != 0
+
+    def test_max_files_negative_rejected(self, sample_repo: Path) -> None:
+        result = runner.invoke(app, [str(sample_repo), "--max-files", "-1"])
+        assert result.exit_code != 0
+
     def test_parse_programming_error_not_swallowed(self, sample_repo: Path) -> None:
         with patch(
             "repoguide.cli.extract_tags",

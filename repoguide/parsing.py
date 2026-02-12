@@ -86,19 +86,22 @@ def extract_tags(file_path: Path, language: TreeSitterLanguage) -> list[Tag]:
     return tags
 
 
-def _get_enclosing_class_name(func_node: Node) -> str | None:
-    """Return the name of the enclosing class, or None if not inside a class."""
+def _find_enclosing_class(func_node: Node) -> Node | None:
+    """Return the enclosing class_definition node, or None if not inside a class.
+
+    Handles both direct methods (func -> block -> class) and decorated methods
+    (func -> decorated_definition -> block -> class).
+    """
     parent = func_node.parent
     if parent is None:
         return None
-    class_node = None
     if (
         parent.type == "block"
         and parent.parent
         and parent.parent.type == "class_definition"
     ):
-        class_node = parent.parent
-    elif parent.type == "decorated_definition":
+        return parent.parent
+    if parent.type == "decorated_definition":
         grandparent = parent.parent
         if (
             grandparent
@@ -106,7 +109,13 @@ def _get_enclosing_class_name(func_node: Node) -> str | None:
             and grandparent.parent
             and grandparent.parent.type == "class_definition"
         ):
-            class_node = grandparent.parent
+            return grandparent.parent
+    return None
+
+
+def _get_enclosing_class_name(func_node: Node) -> str | None:
+    """Return the name of the enclosing class, or None if not inside a class."""
+    class_node = _find_enclosing_class(func_node)
     if class_node is None:
         return None
     for child in class_node.children:
@@ -117,26 +126,7 @@ def _get_enclosing_class_name(func_node: Node) -> str | None:
 
 def _is_method(func_node: Node) -> bool:
     """Check if a function_definition node is a method (inside a class)."""
-    parent = func_node.parent
-    if parent is None:
-        return False
-    if (
-        parent.type == "block"
-        and parent.parent
-        and parent.parent.type == "class_definition"
-    ):
-        return True
-    # Decorated methods: function_definition -> decorated_definition -> block -> class
-    if parent.type == "decorated_definition":
-        grandparent = parent.parent
-        if (
-            grandparent
-            and grandparent.type == "block"
-            and grandparent.parent
-            and grandparent.parent.type == "class_definition"
-        ):
-            return True
-    return False
+    return _find_enclosing_class(func_node) is not None
 
 
 def _extract_signature(def_node: Node, symbol_kind: SymbolKind) -> str:

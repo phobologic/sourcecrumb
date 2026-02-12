@@ -19,6 +19,9 @@ def select_files(
     Returns:
         A new RepoMap with only selected files and their dependencies.
     """
+    if max_files is not None and max_files < 1:
+        raise ValueError(f"max_files must be >= 1, got {max_files}")
+
     if max_files is None or max_files >= len(repo_map.files):
         return repo_map
 

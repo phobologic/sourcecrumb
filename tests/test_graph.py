@@ -74,37 +74,43 @@ class TestRankFiles:
 
     def test_assigns_ranks(self, sample_file_infos: list[FileInfo]) -> None:
         graph, _ = build_graph(sample_file_infos)
-        ranked = rank_files(graph, sample_file_infos)
-        for fi in ranked:
+        rank_files(graph, sample_file_infos)
+        for fi in sample_file_infos:
             assert fi.rank >= 0.0
 
     def test_ranks_approximately_sum_to_one(
         self, sample_file_infos: list[FileInfo]
     ) -> None:
         graph, _ = build_graph(sample_file_infos)
-        ranked = rank_files(graph, sample_file_infos)
-        total = sum(fi.rank for fi in ranked)
+        rank_files(graph, sample_file_infos)
+        total = sum(fi.rank for fi in sample_file_infos)
         assert abs(total - 1.0) < 0.01
 
     def test_more_referenced_file_ranked_higher(
         self, sample_file_infos: list[FileInfo]
     ) -> None:
         graph, _ = build_graph(sample_file_infos)
-        ranked = rank_files(graph, sample_file_infos)
+        rank_files(graph, sample_file_infos)
         # models.py and utils.py are referenced by main.py, so they should
         # rank higher than main.py (which is only a referencing file)
-        rank_by_path = {fi.path: fi.rank for fi in ranked}
+        rank_by_path = {fi.path: fi.rank for fi in sample_file_infos}
         assert rank_by_path[Path("models.py")] > rank_by_path[Path("main.py")]
 
     def test_empty_graph_uniform_rank(self) -> None:
         fi1 = FileInfo(path=Path("a.py"), language="python")
         fi2 = FileInfo(path=Path("b.py"), language="python")
-        graph, _ = build_graph([fi1, fi2])
-        ranked = rank_files(graph, [fi1, fi2])
-        assert abs(ranked[0].rank - ranked[1].rank) < 0.001
+        infos = [fi1, fi2]
+        graph, _ = build_graph(infos)
+        rank_files(graph, infos)
+        assert abs(infos[0].rank - infos[1].rank) < 0.001
 
     def test_sorted_by_rank_descending(self, sample_file_infos: list[FileInfo]) -> None:
         graph, _ = build_graph(sample_file_infos)
-        ranked = rank_files(graph, sample_file_infos)
-        ranks = [fi.rank for fi in ranked]
+        rank_files(graph, sample_file_infos)
+        ranks = [fi.rank for fi in sample_file_infos]
         assert ranks == sorted(ranks, reverse=True)
+
+    def test_returns_none(self, sample_file_infos: list[FileInfo]) -> None:
+        graph, _ = build_graph(sample_file_infos)
+        result = rank_files(graph, sample_file_infos)
+        assert result is None

@@ -58,15 +58,15 @@ def build_graph(
 def rank_files(
     graph: nx.MultiDiGraph,
     file_infos: list[FileInfo],
-) -> list[FileInfo]:
-    """Apply PageRank to the graph and update file_infos with rank scores.
+) -> None:
+    """Apply PageRank to the graph and update file_infos in place.
+
+    Mutates file_infos: sets each item's rank field and sorts the list
+    by rank descending.
 
     Args:
         graph: The dependency MultiDiGraph.
-        file_infos: List of FileInfo to update.
-
-    Returns:
-        The file_infos list, sorted by rank descending, with rank field set.
+        file_infos: List of FileInfo to update in place.
     """
     if graph.number_of_edges() == 0:
         uniform = 1.0 / max(len(file_infos), 1)
@@ -78,4 +78,3 @@ def rank_files(
             fi.rank = ranks.get(fi.path, 0.0)
 
     file_infos.sort(key=lambda fi: fi.rank, reverse=True)
-    return file_infos

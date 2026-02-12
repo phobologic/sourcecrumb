@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from repoguide.models import Dependency, FileInfo, RepoMap
 from repoguide.ranking import select_files
 
@@ -63,3 +65,21 @@ class TestSelectFiles:
         )
         result = select_files(repo_map, max_files=100)
         assert len(result.files) == 1
+
+    def test_max_files_zero_raises(self) -> None:
+        repo_map = RepoMap(
+            repo_name="test",
+            root=Path("/tmp"),
+            files=[FileInfo(path=Path("a.py"), language="python")],
+        )
+        with pytest.raises(ValueError, match="max_files must be >= 1"):
+            select_files(repo_map, max_files=0)
+
+    def test_max_files_negative_raises(self) -> None:
+        repo_map = RepoMap(
+            repo_name="test",
+            root=Path("/tmp"),
+            files=[FileInfo(path=Path("a.py"), language="python")],
+        )
+        with pytest.raises(ValueError, match="max_files must be >= 1"):
+            select_files(repo_map, max_files=-1)

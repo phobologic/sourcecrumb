@@ -1,0 +1,1 @@
+/Users/mike/git/claude_code/python/hooks/ruff-fix.sh

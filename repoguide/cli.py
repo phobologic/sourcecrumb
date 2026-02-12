@@ -1,0 +1,119 @@
+"""CLI entry point for repoguide."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Annotated
+
+import typer
+
+from repoguide.discovery import discover_files
+from repoguide.graph import build_graph, rank_files
+from repoguide.languages import LANGUAGES
+from repoguide.models import FileInfo, RepoMap
+from repoguide.parsing import extract_tags
+from repoguide.ranking import select_files
+from repoguide.toon import encode
+
+
+def _cache_is_fresh(cache: Path, root: Path, files: list[tuple[Path, str]]) -> bool:
+    """Check if cache file exists and is newer than all discovered source files."""
+    if not cache.is_file():
+        return False
+    cache_mtime = cache.stat().st_mtime
+    try:
+        return all((root / rel).stat().st_mtime < cache_mtime for rel, _ in files)
+    except OSError:
+        return False
+
+
+app = typer.Typer(
+    name="repoguide",
+    help="Generate a tree-sitter repository map in TOON format.",
+    no_args_is_help=False,
+)
+
+
+@app.command()
+def main(
+    root: Annotated[
+        Path,
+        typer.Argument(
+            help="Repository root directory.",
+            exists=True,
+            file_okay=False,
+            resolve_path=True,
+        ),
+    ] = Path("."),
+    max_files: Annotated[
+        int | None,
+        typer.Option(
+            "--max-files",
+            "-n",
+            help="Maximum number of files to include in output.",
+        ),
+    ] = None,
+    language: Annotated[
+        str | None,
+        typer.Option(
+            "--language",
+            "-l",
+            help="Restrict to a specific language (e.g., python).",
+        ),
+    ] = None,
+    cache: Annotated[
+        Path | None,
+        typer.Option(
+            "--cache", help="Cache file; reuse if newer than all source files."
+        ),
+    ] = None,
+) -> None:
+    """Generate a repository map and print it to stdout."""
+    if language and language not in LANGUAGES:
+        typer.echo(
+            f"Error: unsupported language '{language}'. "
+            f"Supported: {', '.join(LANGUAGES)}",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    files = discover_files(root, language_filter=language)
+    if not files:
+        typer.echo("No parseable files found.", err=True)
+        raise typer.Exit(1)
+
+    if cache and _cache_is_fresh(cache, root, files):
+        typer.echo(cache.read_text("utf-8"), nl=False)
+        return
+
+    file_infos: list[FileInfo] = []
+    for rel_path, lang_name in files:
+        abs_path = root / rel_path
+        lang_config = LANGUAGES[lang_name]
+        try:
+            tags = extract_tags(abs_path, lang_config)
+        except (OSError, UnicodeDecodeError) as exc:
+            typer.echo(f"Warning: failed to parse {rel_path}: {exc}", err=True)
+            continue
+        file_infos.append(FileInfo(path=rel_path, language=lang_name, tags=tags))
+
+    if not file_infos:
+        typer.echo("No files could be parsed.", err=True)
+        raise typer.Exit(1)
+
+    graph, dependencies = build_graph(file_infos)
+    file_infos = rank_files(graph, file_infos)
+
+    repo_map = RepoMap(
+        repo_name=root.name,
+        root=root,
+        files=file_infos,
+        dependencies=dependencies,
+    )
+
+    repo_map = select_files(repo_map, max_files=max_files)
+
+    output = encode(repo_map)
+    if cache:
+        cache.write_text(output + "\n", "utf-8")
+    typer.echo(output)

@@ -3,6 +3,8 @@ name = "repoguide"
 version = "0.1.0"
 description = "Tree-sitter repository map in TOON format for LLM consumption"
 readme = "README.md"
+license = "MIT"
+authors = [{ name = "Michael Barrett", email = "loki77@gmail.com" }]
 requires-python = ">=3.13"
 dependencies = [
     "typer>=0.15.0",
@@ -16,6 +18,11 @@ dependencies = [
 
 [project.scripts]
 repoguide = "repoguide.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/phobologic/repoguide"
+Repository = "https://github.com/phobologic/repoguide"
+Issues = "https://github.com/phobologic/repoguide/issues"
 
 [build-system]
 requires = ["hatchling"]

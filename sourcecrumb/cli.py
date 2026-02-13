@@ -12,10 +12,11 @@ from sourcecrumb.discovery import discover_files
 from sourcecrumb.graph import build_graph, rank_files
 from sourcecrumb.languages import LANGUAGES
 from sourcecrumb.models import FileInfo, RepoMap
-from sourcecrumb.parallel import _DEFAULT_MAX_FILE_SIZE
 from sourcecrumb.parsing import extract_tags
 from sourcecrumb.ranking import select_files
 from sourcecrumb.toon import encode
+
+_DEFAULT_MAX_FILE_SIZE = 1_000_000  # 1 MB
 
 
 def _cache_is_fresh(cache: Path, root: Path, files: list[tuple[Path, str]]) -> bool:
@@ -131,13 +132,6 @@ def main(
             help="Skip files larger than this many bytes (default: 1MB).",
         ),
     ] = _DEFAULT_MAX_FILE_SIZE,
-    fast: Annotated[
-        bool,
-        typer.Option(
-            "--fast",
-            help="Experimental: parse files in parallel for faster processing.",
-        ),
-    ] = False,
     _version: Annotated[
         bool | None,
         typer.Option(
@@ -172,12 +166,7 @@ def main(
         typer.echo("No parseable files found (all exceeded size limit).", err=True)
         raise typer.Exit(1)
 
-    if fast:
-        from sourcecrumb.parallel import parse_files_parallel
-
-        file_infos = parse_files_parallel(root, files)
-    else:
-        file_infos = _parse_files_sequential(root, files)
+    file_infos = _parse_files_sequential(root, files)
 
     if not file_infos:
         typer.echo("No files could be parsed.", err=True)

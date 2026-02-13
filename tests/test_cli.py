@@ -86,39 +86,6 @@ class TestCLI:
         assert isinstance(result.exception, TypeError)
 
 
-class TestFastMode:
-    """Tests for the --fast experimental flag."""
-
-    def test_fast_produces_valid_output(self, sample_repo: Path) -> None:
-        result = runner.invoke(app, [str(sample_repo), "--fast"])
-        assert result.exit_code == 0
-        assert "repo:" in result.stdout
-        assert "files[" in result.stdout
-        assert "symbols[" in result.stdout
-        assert "dependencies[" in result.stdout
-
-    def test_fast_matches_sequential_output(self, sample_repo: Path) -> None:
-        sequential = runner.invoke(app, [str(sample_repo)])
-        fast = runner.invoke(app, [str(sample_repo), "--fast"])
-        assert sequential.exit_code == 0
-        assert fast.exit_code == 0
-        assert sequential.stdout == fast.stdout
-
-    def test_fast_with_max_files(self, sample_repo: Path) -> None:
-        result = runner.invoke(app, [str(sample_repo), "--fast", "--max-files", "2"])
-        assert result.exit_code == 0
-        assert "files[2]" in result.stdout
-
-    def test_fast_with_cache(self, sample_repo: Path, tmp_path: Path) -> None:
-        cache_file = tmp_path / "map.cache"
-        result = runner.invoke(
-            app, [str(sample_repo), "--fast", "--cache", str(cache_file)]
-        )
-        assert result.exit_code == 0
-        assert cache_file.is_file()
-        assert cache_file.read_text("utf-8") == result.stdout
-
-
 class TestCache:
     """Tests for the --cache flag."""
 
@@ -182,19 +149,6 @@ class TestMaxFileSize:
         assert "small.py" in result.stdout
         assert "large.py" not in result.stdout
         assert "skipped" in result.output
-
-    def test_skips_large_files_fast(self, tmp_path: Path) -> None:
-        (tmp_path / "small.py").write_text("x = 1\n", encoding="utf-8")
-        (tmp_path / "large.py").write_text("y = 2\n" * 1000, encoding="utf-8")
-        small_size = (tmp_path / "small.py").stat().st_size
-        large_size = (tmp_path / "large.py").stat().st_size
-        limit = (small_size + large_size) // 2
-        result = runner.invoke(
-            app, [str(tmp_path), "--fast", "--max-file-size", str(limit)]
-        )
-        assert result.exit_code == 0
-        assert "small.py" in result.stdout
-        assert "large.py" not in result.stdout
 
     def test_small_files_pass_with_limit(self, sample_repo: Path) -> None:
         result = runner.invoke(app, [str(sample_repo), "--max-file-size", "1000000"])

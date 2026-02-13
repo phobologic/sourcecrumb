@@ -1,6 +1,6 @@
 [project]
 name = "sourcecrumb"
-version = "0.2.2"
+version = "0.2.3"
 description = "Tree-sitter repository map in TOON format for LLM consumption"
 readme = "README.md"
 license = "MIT"

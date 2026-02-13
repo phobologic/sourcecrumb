@@ -12,8 +12,30 @@ The goal: give an LLM agent a high-level map of a codebase so it can explore mor
 
 Requires Python >= 3.13.
 
+### From PyPI
+
 ```
-git clone <repo-url>
+pip install sourcecrumb
+```
+
+Or with uv:
+
+```
+uv pip install sourcecrumb
+```
+
+### Run without installing
+
+```
+uvx sourcecrumb .
+```
+
+The short alias `scrumb` also works everywhere `sourcecrumb` does.
+
+### From source
+
+```
+git clone https://github.com/phobologic/sourcecrumb.git
 cd sourcecrumb
 uv sync
 ```
@@ -65,7 +87,7 @@ Add this to `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "scrumb \"$CLAUDE_PROJECT_DIR\" --cache \"$CLAUDE_PROJECT_DIR/.cache/sourcecrumb.toon\""
+            "command": "uvx sourcecrumb \"$CLAUDE_PROJECT_DIR\" --cache \"$CLAUDE_PROJECT_DIR/.cache/sourcecrumb.toon\""
           }
         ]
       }
@@ -73,6 +95,8 @@ Add this to `.claude/settings.json`:
   }
 }
 ```
+
+If you have sourcecrumb installed globally, you can use `scrumb` directly instead of going through `uvx`.
 
 The `SubagentStart` hook fires when any subagent launches. sourcecrumb's stdout is injected into the subagent's context, giving it an instant overview of the codebase.
 

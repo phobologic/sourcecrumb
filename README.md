@@ -30,8 +30,6 @@ uv pip install sourcecrumb
 uvx sourcecrumb .
 ```
 
-The short alias `scrumb` also works everywhere `sourcecrumb` does.
-
 ### From source
 
 ```
@@ -43,7 +41,7 @@ uv sync
 ## Usage
 
 ```
-scrumb [ROOT] [OPTIONS]
+sourcecrumb [ROOT] [OPTIONS]
 ```
 
 | Option | Description |
@@ -52,11 +50,12 @@ scrumb [ROOT] [OPTIONS]
 | `--max-files`, `-n` | Limit output to top N files by PageRank (min: 1) |
 | `--language`, `-l` | Restrict to a specific language (e.g., `python`) |
 | `--cache` | Cache file path; reuses if newer than all source files |
+| `--fast` | Experimental: parse files in parallel for faster processing |
 
 ### Example
 
 ```
-$ scrumb . -n 3
+$ sourcecrumb . -n 3
 repo: sourcecrumb
 root: sourcecrumb
 files[3]{path,language,rank}:
@@ -96,7 +95,7 @@ Add this to `.claude/settings.json`:
 }
 ```
 
-If you have sourcecrumb installed globally, you can use `scrumb` directly instead of going through `uvx`.
+If you have sourcecrumb installed globally, you can use `sourcecrumb` directly instead of going through `uvx`.
 
 The `SubagentStart` hook fires when any subagent launches. sourcecrumb's stdout is injected into the subagent's context, giving it an instant overview of the codebase.
 

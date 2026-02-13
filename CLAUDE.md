@@ -11,7 +11,7 @@ uv sync                                  # install deps
 uv run pytest                            # run tests
 uv run ruff check sourcecrumb/ tests/    # lint
 uv run ruff format sourcecrumb/ tests/   # format
-uv run scrumb .                          # run on current repo
+uv run sourcecrumb .                     # run on current repo
 ```
 
 ## Architecture

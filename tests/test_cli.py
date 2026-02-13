@@ -86,6 +86,39 @@ class TestCLI:
         assert isinstance(result.exception, TypeError)
 
 
+class TestFastMode:
+    """Tests for the --fast experimental flag."""
+
+    def test_fast_produces_valid_output(self, sample_repo: Path) -> None:
+        result = runner.invoke(app, [str(sample_repo), "--fast"])
+        assert result.exit_code == 0
+        assert "repo:" in result.stdout
+        assert "files[" in result.stdout
+        assert "symbols[" in result.stdout
+        assert "dependencies[" in result.stdout
+
+    def test_fast_matches_sequential_output(self, sample_repo: Path) -> None:
+        sequential = runner.invoke(app, [str(sample_repo)])
+        fast = runner.invoke(app, [str(sample_repo), "--fast"])
+        assert sequential.exit_code == 0
+        assert fast.exit_code == 0
+        assert sequential.stdout == fast.stdout
+
+    def test_fast_with_max_files(self, sample_repo: Path) -> None:
+        result = runner.invoke(app, [str(sample_repo), "--fast", "--max-files", "2"])
+        assert result.exit_code == 0
+        assert "files[2]" in result.stdout
+
+    def test_fast_with_cache(self, sample_repo: Path, tmp_path: Path) -> None:
+        cache_file = tmp_path / "map.cache"
+        result = runner.invoke(
+            app, [str(sample_repo), "--fast", "--cache", str(cache_file)]
+        )
+        assert result.exit_code == 0
+        assert cache_file.is_file()
+        assert cache_file.read_text("utf-8") == result.stdout
+
+
 class TestCache:
     """Tests for the --cache flag."""
 

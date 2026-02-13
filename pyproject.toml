@@ -1,6 +1,6 @@
 [project]
 name = "sourcecrumb"
-version = "0.2.0"
+version = "0.2.1"
 description = "Tree-sitter repository map in TOON format for LLM consumption"
 readme = "README.md"
 license = "MIT"
@@ -17,7 +17,6 @@ dependencies = [
 ]
 
 [project.scripts]
-scrumb = "sourcecrumb.cli:app"
 sourcecrumb = "sourcecrumb.cli:app"
 
 [project.urls]

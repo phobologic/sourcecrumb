@@ -27,8 +27,25 @@ def _cache_is_fresh(cache: Path, root: Path, files: list[tuple[Path, str]]) -> b
         return False
 
 
+def _parse_files_sequential(
+    root: Path, files: list[tuple[Path, str]]
+) -> list[FileInfo]:
+    """Parse files sequentially, skipping files that fail to parse."""
+    file_infos: list[FileInfo] = []
+    for rel_path, lang_name in files:
+        abs_path = root / rel_path
+        lang_config = LANGUAGES[lang_name]
+        try:
+            tags = extract_tags(abs_path, lang_config)
+        except (OSError, UnicodeDecodeError) as exc:
+            typer.echo(f"Warning: failed to parse {rel_path}: {exc}", err=True)
+            continue
+        file_infos.append(FileInfo(path=rel_path, language=lang_name, tags=tags))
+    return file_infos
+
+
 app = typer.Typer(
-    name="scrumb",
+    name="sourcecrumb",
     help="Generate a tree-sitter repository map in TOON format.",
     no_args_is_help=False,
 )
@@ -68,6 +85,13 @@ def main(
             "--cache", help="Cache file; reuse if newer than all source files."
         ),
     ] = None,
+    fast: Annotated[
+        bool,
+        typer.Option(
+            "--fast",
+            help="Experimental: parse files in parallel for faster processing.",
+        ),
+    ] = False,
 ) -> None:
     """Generate a repository map and print it to stdout."""
     if language and language not in LANGUAGES:
@@ -87,16 +111,12 @@ def main(
         typer.echo(cache.read_text("utf-8"), nl=False)
         return
 
-    file_infos: list[FileInfo] = []
-    for rel_path, lang_name in files:
-        abs_path = root / rel_path
-        lang_config = LANGUAGES[lang_name]
-        try:
-            tags = extract_tags(abs_path, lang_config)
-        except (OSError, UnicodeDecodeError) as exc:
-            typer.echo(f"Warning: failed to parse {rel_path}: {exc}", err=True)
-            continue
-        file_infos.append(FileInfo(path=rel_path, language=lang_name, tags=tags))
+    if fast:
+        from sourcecrumb.parallel import parse_files_parallel
+
+        file_infos = parse_files_parallel(root, files)
+    else:
+        file_infos = _parse_files_sequential(root, files)
 
     if not file_infos:
         typer.echo("No files could be parsed.", err=True)

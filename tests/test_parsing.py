@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from repoguide.languages import LANGUAGES
-from repoguide.models import SymbolKind, TagKind
-from repoguide.parsing import extract_tags
+from sourcecrumb.languages import LANGUAGES
+from sourcecrumb.models import SymbolKind, TagKind
+from sourcecrumb.parsing import extract_tags
 
 PYTHON = LANGUAGES["python"]
 

@@ -1,5 +1,5 @@
 [project]
-name = "repoguide"
+name = "sourcecrumb"
 version = "0.1.0"
 description = "Tree-sitter repository map in TOON format for LLM consumption"
 readme = "README.md"
@@ -17,12 +17,12 @@ dependencies = [
 ]
 
 [project.scripts]
-repoguide = "repoguide.cli:app"
+scrumb = "sourcecrumb.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/phobologic/repoguide"
-Repository = "https://github.com/phobologic/repoguide"
-Issues = "https://github.com/phobologic/repoguide/issues"
+Homepage = "https://github.com/phobologic/sourcecrumb"
+Repository = "https://github.com/phobologic/sourcecrumb"
+Issues = "https://github.com/phobologic/sourcecrumb/issues"
 
 [build-system]
 requires = ["hatchling"]
@@ -50,7 +50,7 @@ select = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["repoguide"]
+known-first-party = ["sourcecrumb"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

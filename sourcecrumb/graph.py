@@ -7,7 +7,7 @@ from pathlib import Path
 
 import networkx as nx
 
-from repoguide.models import Dependency, FileInfo, TagKind
+from sourcecrumb.models import Dependency, FileInfo, TagKind
 
 
 def build_graph(

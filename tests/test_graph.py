@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from repoguide.graph import build_graph, rank_files
-from repoguide.models import FileInfo, SymbolKind, Tag, TagKind
+from sourcecrumb.graph import build_graph, rank_files
+from sourcecrumb.models import FileInfo, SymbolKind, Tag, TagKind
 
 
 class TestBuildGraph:

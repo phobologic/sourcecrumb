@@ -1,4 +1,4 @@
-"""CLI entry point for repoguide."""
+"""CLI entry point for sourcecrumb."""
 
 from __future__ import annotations
 
@@ -7,13 +7,13 @@ from typing import Annotated
 
 import typer
 
-from repoguide.discovery import discover_files
-from repoguide.graph import build_graph, rank_files
-from repoguide.languages import LANGUAGES
-from repoguide.models import FileInfo, RepoMap
-from repoguide.parsing import extract_tags
-from repoguide.ranking import select_files
-from repoguide.toon import encode
+from sourcecrumb.discovery import discover_files
+from sourcecrumb.graph import build_graph, rank_files
+from sourcecrumb.languages import LANGUAGES
+from sourcecrumb.models import FileInfo, RepoMap
+from sourcecrumb.parsing import extract_tags
+from sourcecrumb.ranking import select_files
+from sourcecrumb.toon import encode
 
 
 def _cache_is_fresh(cache: Path, root: Path, files: list[tuple[Path, str]]) -> bool:
@@ -28,7 +28,7 @@ def _cache_is_fresh(cache: Path, root: Path, files: list[tuple[Path, str]]) -> b
 
 
 app = typer.Typer(
-    name="repoguide",
+    name="scrumb",
     help="Generate a tree-sitter repository map in TOON format.",
     no_args_is_help=False,
 )

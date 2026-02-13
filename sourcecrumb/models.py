@@ -1,4 +1,4 @@
-"""Core data structures for repoguide."""
+"""Core data structures for sourcecrumb."""
 
 from __future__ import annotations
 

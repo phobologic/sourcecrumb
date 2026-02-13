@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from repoguide.models import RepoMap, TagKind
+from sourcecrumb.models import RepoMap, TagKind
 
 _NEEDS_QUOTING = re.compile(r'[,:"\\{}\[\]]')
 _LOOKS_NUMERIC = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?$")

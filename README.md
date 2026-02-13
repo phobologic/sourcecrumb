@@ -1,10 +1,10 @@
-# repoguide
+# sourcecrumb
 
 Tree-sitter repository map in TOON format for LLM consumption.
 
 ## What it does
 
-repoguide parses a codebase with tree-sitter, extracts symbols (classes, functions, methods, imports), builds a file-to-file dependency graph, and ranks files by PageRank. The output is a compact TOON-formatted map designed to fit in an LLM context window.
+sourcecrumb parses a codebase with tree-sitter, extracts symbols (classes, functions, methods, imports), builds a file-to-file dependency graph, and ranks files by PageRank. The output is a compact TOON-formatted map designed to fit in an LLM context window.
 
 The goal: give an LLM agent a high-level map of a codebase so it can explore more effectively — knowing which files matter most, what symbols they define, and how they depend on each other.
 
@@ -14,14 +14,14 @@ Requires Python >= 3.13.
 
 ```
 git clone <repo-url>
-cd repoguide
+cd sourcecrumb
 uv sync
 ```
 
 ## Usage
 
 ```
-repoguide [ROOT] [OPTIONS]
+scrumb [ROOT] [OPTIONS]
 ```
 
 | Option | Description |
@@ -34,26 +34,26 @@ repoguide [ROOT] [OPTIONS]
 ### Example
 
 ```
-$ repoguide . -n 3
-repo: repoguide
-root: repoguide
+$ scrumb . -n 3
+repo: sourcecrumb
+root: sourcecrumb
 files[3]{path,language,rank}:
-  repoguide/models.py,python,0.2615
-  repoguide/languages.py,python,0.1155
-  repoguide/discovery.py,python,0.0590
+  sourcecrumb/models.py,python,0.2615
+  sourcecrumb/languages.py,python,0.1155
+  sourcecrumb/discovery.py,python,0.0590
 symbols[17]{file,name,kind,line,signature}:
-  repoguide/models.py,TagKind,class,10,TagKind(enum.Enum)
-  repoguide/models.py,SymbolKind,class,17,SymbolKind(enum.Enum)
-  repoguide/models.py,Tag,class,27,Tag
-  repoguide/models.py,FileInfo,class,39,FileInfo
+  sourcecrumb/models.py,TagKind,class,10,TagKind(enum.Enum)
+  sourcecrumb/models.py,SymbolKind,class,17,SymbolKind(enum.Enum)
+  sourcecrumb/models.py,Tag,class,27,Tag
+  sourcecrumb/models.py,FileInfo,class,39,FileInfo
   ...
 dependencies[1]{source,target,symbols}:
-  repoguide/discovery.py,repoguide/languages.py,language_for_extension
+  sourcecrumb/discovery.py,sourcecrumb/languages.py,language_for_extension
 ```
 
 ## Claude Code integration
 
-The primary use case is running repoguide as a Claude Code hook so every subagent automatically gets a repo map injected into its context.
+The primary use case is running sourcecrumb as a Claude Code hook so every subagent automatically gets a repo map injected into its context.
 
 Add this to `.claude/settings.json`:
 
@@ -65,7 +65,7 @@ Add this to `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "repoguide \"$CLAUDE_PROJECT_DIR\" --cache \"$CLAUDE_PROJECT_DIR/.cache/repoguide.toon\""
+            "command": "scrumb \"$CLAUDE_PROJECT_DIR\" --cache \"$CLAUDE_PROJECT_DIR/.cache/sourcecrumb.toon\""
           }
         ]
       }
@@ -74,7 +74,7 @@ Add this to `.claude/settings.json`:
 }
 ```
 
-The `SubagentStart` hook fires when any subagent launches. repoguide's stdout is injected into the subagent's context, giving it an instant overview of the codebase.
+The `SubagentStart` hook fires when any subagent launches. sourcecrumb's stdout is injected into the subagent's context, giving it an instant overview of the codebase.
 
 `--cache` avoids re-parsing on every agent launch — the cache file is reused as long as no source files have changed. Add `.cache/` to your `.gitignore`.
 
@@ -97,12 +97,12 @@ The output uses TOON (Text Object Oriented Notation), a compact format designed 
 
 ## Supported languages
 
-Python. Extensible by adding a `.scm` query file to `repoguide/queries/` and registering the language in `repoguide/languages.py`.
+Python. Extensible by adding a `.scm` query file to `sourcecrumb/queries/` and registering the language in `sourcecrumb/languages.py`.
 
 ## Development
 
 ```
-uv run pytest                        # run tests
-uv run ruff check repoguide/ tests/  # lint
-uv run ruff format repoguide/ tests/ # format
+uv run pytest                            # run tests
+uv run ruff check sourcecrumb/ tests/    # lint
+uv run ruff format sourcecrumb/ tests/   # format
 ```

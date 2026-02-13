@@ -6,8 +6,8 @@ from pathlib import Path
 
 from tree_sitter import Node, QueryCursor
 
-from repoguide.languages import TreeSitterLanguage
-from repoguide.models import SymbolKind, Tag, TagKind
+from sourcecrumb.languages import TreeSitterLanguage
+from sourcecrumb.models import SymbolKind, Tag, TagKind
 
 _CAPTURE_MAP: dict[str, tuple[TagKind, SymbolKind]] = {
     "definition.class": (TagKind.DEFINITION, SymbolKind.CLASS),

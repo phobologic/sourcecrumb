@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from repoguide.models import FileInfo, RepoMap, SymbolKind, Tag, TagKind
-from repoguide.toon import _encode_value, encode
+from sourcecrumb.models import FileInfo, RepoMap, SymbolKind, Tag, TagKind
+from sourcecrumb.toon import _encode_value, encode
 
 
 class TestEncodeValue:

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pathspec
 
-from repoguide.languages import language_for_extension
+from sourcecrumb.languages import language_for_extension
 
 SKIP_DIRS: frozenset[str] = frozenset(
     {

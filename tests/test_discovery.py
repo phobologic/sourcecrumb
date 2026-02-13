@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from unittest.mock import patch
 
-from repoguide.discovery import _git_ls_files, discover_files
+from sourcecrumb.discovery import _git_ls_files, discover_files
 
 
 class TestDiscoverFiles:
@@ -111,7 +111,7 @@ class TestGitLsFiles:
     def test_returns_none_on_command_error(self, tmp_path: Path) -> None:
         (tmp_path / ".git").mkdir()
         with patch(
-            "repoguide.discovery.subprocess.run",
+            "sourcecrumb.discovery.subprocess.run",
             return_value=subprocess.CompletedProcess(
                 [], returncode=128, stdout="", stderr=""
             ),
@@ -121,7 +121,7 @@ class TestGitLsFiles:
     def test_returns_none_on_timeout(self, tmp_path: Path) -> None:
         (tmp_path / ".git").mkdir()
         with patch(
-            "repoguide.discovery.subprocess.run",
+            "sourcecrumb.discovery.subprocess.run",
             side_effect=subprocess.TimeoutExpired(cmd=[], timeout=10),
         ):
             assert _git_ls_files(tmp_path) is None
@@ -129,7 +129,7 @@ class TestGitLsFiles:
     def test_returns_none_on_missing_git_binary(self, tmp_path: Path) -> None:
         (tmp_path / ".git").mkdir()
         with patch(
-            "repoguide.discovery.subprocess.run",
+            "sourcecrumb.discovery.subprocess.run",
             side_effect=FileNotFoundError("git"),
         ):
             assert _git_ls_files(tmp_path) is None
@@ -137,7 +137,7 @@ class TestGitLsFiles:
     def test_returns_file_set(self, tmp_path: Path) -> None:
         (tmp_path / ".git").mkdir()
         with patch(
-            "repoguide.discovery.subprocess.run",
+            "sourcecrumb.discovery.subprocess.run",
             return_value=subprocess.CompletedProcess(
                 [], returncode=0, stdout="a.py\npkg/b.py\n", stderr=""
             ),
@@ -158,7 +158,7 @@ class TestGitIgnoreIntegration:
         (sub / "hidden.py").write_text("pass", encoding="utf-8")
         # Mock git ls-files to exclude sub/hidden.py
         with patch(
-            "repoguide.discovery._git_ls_files",
+            "sourcecrumb.discovery._git_ls_files",
             return_value={"kept.py", "sub/visible.py"},
         ):
             result = discover_files(tmp_path)
@@ -183,7 +183,7 @@ class TestGitIgnoreIntegration:
         (tmp_path / "gen.py").write_text("pass", encoding="utf-8")
         (tmp_path / "app.py").write_text("pass", encoding="utf-8")
         with patch(
-            "repoguide.discovery._git_ls_files",
+            "sourcecrumb.discovery._git_ls_files",
             return_value={"gen.py", "app.py"},
         ):
             result = discover_files(tmp_path, extra_ignores=["gen.py"])

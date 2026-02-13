@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from repoguide.models import RepoMap
+from sourcecrumb.models import RepoMap
 
 
 def select_files(

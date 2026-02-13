@@ -1,4 +1,4 @@
-"""Shared test fixtures for repoguide."""
+"""Shared test fixtures for sourcecrumb."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from repoguide.models import (
+from sourcecrumb.models import (
     Dependency,
     FileInfo,
     RepoMap,

@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from repoguide.models import Dependency, FileInfo, RepoMap
-from repoguide.ranking import select_files
+from sourcecrumb.models import Dependency, FileInfo, RepoMap
+from sourcecrumb.ranking import select_files
 
 
 class TestSelectFiles:

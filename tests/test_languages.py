@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from tree_sitter import Query
 
-from repoguide.languages import LANGUAGES, language_for_extension
+from sourcecrumb.languages import LANGUAGES, language_for_extension
 
 
 class TestLanguageForExtension:

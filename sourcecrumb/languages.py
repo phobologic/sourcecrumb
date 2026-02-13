@@ -71,7 +71,7 @@ def _load_query_file(language_name: str) -> str:
     Raises:
         FileNotFoundError: If no query file exists for the language.
     """
-    query_path = resources.files("repoguide.queries").joinpath(f"{language_name}.scm")
+    query_path = resources.files("sourcecrumb.queries").joinpath(f"{language_name}.scm")
     return query_path.read_text(encoding="utf-8")
 
 

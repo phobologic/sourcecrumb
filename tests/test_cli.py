@@ -9,13 +9,13 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from repoguide.cli import app
+from sourcecrumb.cli import app
 
 runner = CliRunner()
 
 
 class TestCLI:
-    """Tests for the repoguide CLI."""
+    """Tests for the sourcecrumb CLI."""
 
     def test_map_default(self, sample_repo: Path) -> None:
         result = runner.invoke(app, [str(sample_repo)])
@@ -61,7 +61,7 @@ class TestCLI:
 
     def test_parse_unicode_error_skipped(self, sample_repo: Path) -> None:
         with patch(
-            "repoguide.cli.extract_tags",
+            "sourcecrumb.cli.extract_tags",
             side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "bad"),
         ):
             result = runner.invoke(app, [str(sample_repo)])
@@ -78,7 +78,7 @@ class TestCLI:
 
     def test_parse_programming_error_not_swallowed(self, sample_repo: Path) -> None:
         with patch(
-            "repoguide.cli.extract_tags",
+            "sourcecrumb.cli.extract_tags",
             side_effect=TypeError("bug"),
         ):
             result = runner.invoke(app, [str(sample_repo)])

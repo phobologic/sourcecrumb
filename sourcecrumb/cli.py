@@ -11,6 +11,7 @@ from sourcecrumb.discovery import discover_files
 from sourcecrumb.graph import build_graph, rank_files
 from sourcecrumb.languages import LANGUAGES
 from sourcecrumb.models import FileInfo, RepoMap
+from sourcecrumb.parallel import _DEFAULT_MAX_FILE_SIZE
 from sourcecrumb.parsing import extract_tags
 from sourcecrumb.ranking import select_files
 from sourcecrumb.toon import encode
@@ -25,6 +26,35 @@ def _cache_is_fresh(cache: Path, root: Path, files: list[tuple[Path, str]]) -> b
         return all((root / rel).stat().st_mtime < cache_mtime for rel, _ in files)
     except OSError:
         return False
+
+
+def _filter_by_size(
+    root: Path, files: list[tuple[Path, str]], max_size_bytes: int
+) -> list[tuple[Path, str]]:
+    """Filter out files exceeding the size limit.
+
+    Args:
+        root: Repository root directory.
+        files: List of (rel_path, lang_name) tuples.
+        max_size_bytes: Skip files larger than this.
+
+    Returns:
+        Filtered list with oversized files removed.
+    """
+    kept: list[tuple[Path, str]] = []
+    for rel_path, lang_name in files:
+        try:
+            size = (root / rel_path).stat().st_size
+        except OSError:
+            kept.append((rel_path, lang_name))
+            continue
+        if size > max_size_bytes:
+            typer.echo(
+                f"Warning: {rel_path}: skipped (>{max_size_bytes} bytes)", err=True
+            )
+            continue
+        kept.append((rel_path, lang_name))
+    return kept
 
 
 def _parse_files_sequential(
@@ -85,6 +115,14 @@ def main(
             "--cache", help="Cache file; reuse if newer than all source files."
         ),
     ] = None,
+    max_file_size: Annotated[
+        int,
+        typer.Option(
+            "--max-file-size",
+            min=1,
+            help="Skip files larger than this many bytes (default: 1MB).",
+        ),
+    ] = _DEFAULT_MAX_FILE_SIZE,
     fast: Annotated[
         bool,
         typer.Option(
@@ -110,6 +148,11 @@ def main(
     if cache and _cache_is_fresh(cache, root, files):
         typer.echo(cache.read_text("utf-8"), nl=False)
         return
+
+    files = _filter_by_size(root, files, max_file_size)
+    if not files:
+        typer.echo("No parseable files found (all exceeded size limit).", err=True)
+        raise typer.Exit(1)
 
     if fast:
         from sourcecrumb.parallel import parse_files_parallel

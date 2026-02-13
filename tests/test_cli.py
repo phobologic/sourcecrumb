@@ -166,3 +166,43 @@ class TestCache:
         result = runner.invoke(app, [str(sample_repo), "--cache", str(cache_file)])
         assert result.exit_code == 0
         assert cache_file.stat().st_mtime > first_mtime
+
+
+class TestMaxFileSize:
+    """Tests for the --max-file-size option."""
+
+    def test_skips_large_files_sequential(self, tmp_path: Path) -> None:
+        (tmp_path / "small.py").write_text("x = 1\n", encoding="utf-8")
+        (tmp_path / "large.py").write_text("y = 2\n" * 1000, encoding="utf-8")
+        small_size = (tmp_path / "small.py").stat().st_size
+        large_size = (tmp_path / "large.py").stat().st_size
+        limit = (small_size + large_size) // 2
+        result = runner.invoke(app, [str(tmp_path), "--max-file-size", str(limit)])
+        assert result.exit_code == 0
+        assert "small.py" in result.stdout
+        assert "large.py" not in result.stdout
+        assert "skipped" in result.output
+
+    def test_skips_large_files_fast(self, tmp_path: Path) -> None:
+        (tmp_path / "small.py").write_text("x = 1\n", encoding="utf-8")
+        (tmp_path / "large.py").write_text("y = 2\n" * 1000, encoding="utf-8")
+        small_size = (tmp_path / "small.py").stat().st_size
+        large_size = (tmp_path / "large.py").stat().st_size
+        limit = (small_size + large_size) // 2
+        result = runner.invoke(
+            app, [str(tmp_path), "--fast", "--max-file-size", str(limit)]
+        )
+        assert result.exit_code == 0
+        assert "small.py" in result.stdout
+        assert "large.py" not in result.stdout
+
+    def test_small_files_pass_with_limit(self, sample_repo: Path) -> None:
+        result = runner.invoke(app, [str(sample_repo), "--max-file-size", "1000000"])
+        assert result.exit_code == 0
+        assert "files[" in result.stdout
+
+    def test_default_limit_applies(self, sample_repo: Path) -> None:
+        """Default 1MB limit allows normal-sized files through."""
+        result = runner.invoke(app, [str(sample_repo)])
+        assert result.exit_code == 0
+        assert "files[" in result.stdout

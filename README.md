@@ -50,6 +50,7 @@ sourcecrumb [ROOT] [OPTIONS]
 | `--max-files`, `-n` | Limit output to top N files by PageRank (min: 1) |
 | `--language`, `-l` | Restrict to a specific language (e.g., `python`) |
 | `--cache` | Cache file path; reuses if newer than all source files |
+| `--max-file-size` | Skip files larger than this many bytes (default: 1MB) |
 | `--fast` | Experimental: parse files in parallel for faster processing |
 
 ### Example

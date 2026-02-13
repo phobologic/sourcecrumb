@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated
 
@@ -74,6 +75,13 @@ def _parse_files_sequential(
     return file_infos
 
 
+def _version_callback(value: bool) -> None:
+    """Print version and exit."""
+    if value:
+        typer.echo(f"sourcecrumb {version('sourcecrumb')}")
+        raise typer.Exit()
+
+
 app = typer.Typer(
     name="sourcecrumb",
     help="Generate a tree-sitter repository map in TOON format.",
@@ -130,6 +138,16 @@ def main(
             help="Experimental: parse files in parallel for faster processing.",
         ),
     ] = False,
+    _version: Annotated[
+        bool | None,
+        typer.Option(
+            "--version",
+            "-V",
+            help="Show version and exit.",
+            callback=_version_callback,
+            is_eager=True,
+        ),
+    ] = None,
 ) -> None:
     """Generate a repository map and print it to stdout."""
     if language and language not in LANGUAGES:
